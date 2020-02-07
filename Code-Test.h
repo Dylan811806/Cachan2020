@@ -15,13 +15,13 @@ void turn(int, int);    //entrees: int[-100(full G); +100(full D)] - taux de vir
                                 
 void stop (void);// arret moteur  
 
-void rotatoi_complete (bool);              
+void rotation_complete (int);              
 
                         
 void TEST_1 (void);
 void bluetooth(void);
-
-           
+void test (void);
+void Init(void);          
            
            
            
