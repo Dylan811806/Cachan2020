@@ -5,32 +5,52 @@
 #include "Timer.h"
 
 #define TRAJECTORY_CAL 0.0  //compensation de l'asymetrie dans la puissance des moteurs en ligne droite
+#define AVANT 0
+#define ARRIERE 1
 
            
 Serial Bt(PC_10,PC_11);
 
-PwmOut MotL(PC_6);
-PwmOut MotR(PC_8);
-DigitalOut SensL(PC_14);
-DigitalOut SensR(PC_15);
-
+PwmOut MotL(PC_6);//2eme connecteur
+PwmOut MotR(PC_8);//1er connecteur , 3eme sur pc9, le 4eme sur pc8,5eme pc1 pc0 analogin,6eme pc2 et pc3
+DigitalOut SensL(PC_14,0);
+DigitalOut SensR(PC_15,0);//sens mot 3 ,4eme ph1
+//DigitalOut SensTest(PC_13,0);
+//DigitalOut SensL1(PC_14,1);
+//DigitalOut SensR1(PC_15,1);
+///DigitalOut TestPinPh(PH_0,1);// MARCHE PAS a oublier
+DigitalOut TestPinPH1(PH_1,1);
 int etat=0;
 int iVmoy;
 int iTurnRate;
 int tempo_ms=1000;//peut changer
 Timer T1;     
-char commande_bt;
+char commande_bt='g';
+
+
+
+void Init(void)
+{
+    MotL.period_us(100);
+    MotR.period_us(100);
+    
+}
+
 
 /////////////////////////////////////////////////////////////////////////
-
+void test (void){ SensL.write(1);
+    SensR.write(0);
+    wait(0.5);
+    SensL.write(0);
+    SensR.write(1);
+    }
 void ahead(int iVmoy)
 {
-    MotL.period(0.001);
-    MotR.period_us(100);
+   
     if(iVmoy >= 0)
     {
-        SensL.write(true);
-        SensR.write(true);
+        SensL.write(AVANT);
+        SensR.write(AVANT);
 
         MotL.pulsewidth_us(iVmoy + TRAJECTORY_CAL);   
         MotR.pulsewidth_us(iVmoy - TRAJECTORY_CAL);
@@ -38,8 +58,8 @@ void ahead(int iVmoy)
 
     else if(iVmoy < 0)
     {
-        SensL.write(false);
-        SensR.write(false);
+        SensL.write(ARRIERE);
+        SensR.write(ARRIERE);
 
         MotL.pulsewidth_us(-iVmoy - TRAJECTORY_CAL);   
         MotR.pulsewidth_us(-iVmoy + TRAJECTORY_CAL);
@@ -53,13 +73,13 @@ void turn(int iTurnRate, int iVmoyTurn)
 {
     if(iVmoyTurn>=0)
     {
-      SensL.write(true);
-      SensR.write(true);
+      SensL.write(AVANT);
+      SensR.write(AVANT);
     }
     else
     {
-        SensL.write(false);
-        SensR.write(false);
+        SensL.write(ARRIERE);
+        SensR.write(ARRIERE);
     }  
     
 
@@ -90,30 +110,32 @@ printf("TURN\r\n");
 
 void stop_mot (void)
 {
-    printf("STOP\r\n ");
+    //printf("STOP\r\n ");
+    SensL.write(AVANT);
+    SensR.write(AVANT);
     MotL.pulsewidth(0);
     MotR.pulsewidth(0);
 }
 
-void rotation_complete (bool sens)////true rotation horaire, false antihoraire
+void rotation_complete (int sens)////1 rotation horaire, 0 antihoraire
 {
     printf("ROTATION\r\n");
-    if (sens==true)
+    if (sens==1)
     {
-        SensL.write(true);
-        SensR.write(false);
+        SensL.write(AVANT);
+        SensR.write(ARRIERE);
     }
-    if (sens==false)
+    if (sens==0)
     {
-        SensL.write(false);
-        SensR.write(true);
+        SensL.write(ARRIERE);
+        SensR.write(AVANT);
     }
     MotL.pulsewidth(50);
     MotR.pulsewidth(50);
 }
 void TEST_1 (void)
 {
-        T1.stop();
+    T1.stop();
     T1.reset();
     switch(etat)
     {
@@ -144,7 +166,7 @@ void TEST_1 (void)
             case 2: T1.start();
                     iVmoy=50;
                     iTurnRate=50;
-                    turn(iVmoy,iTurnRate);
+                    turn(iTurnRate,iVmoy);
                     while(T1.read_ms()<=tempo_ms){}
                     T1.stop();
                     T1.reset();
@@ -152,7 +174,7 @@ void TEST_1 (void)
                     iVmoy=-50;
                     iTurnRate=50;
                     T1.start();
-                    turn(iVmoy,iTurnRate);
+                    turn(iTurnRate,iVmoy);
                     while(T1.read_ms()<=tempo_ms){}
                     T1.stop();
                     T1.reset();
@@ -165,7 +187,7 @@ void TEST_1 (void)
             case 3: T1.start();
                     iVmoy=50;
                     iTurnRate=-50;
-                    turn(iVmoy,iTurnRate);
+                    turn(iTurnRate,iVmoy);
                     while(T1.read_ms()<=tempo_ms){}
                     T1.stop();
                     T1.reset();
@@ -173,7 +195,7 @@ void TEST_1 (void)
                     iVmoy=-50;
                     iTurnRate=-50;
                     T1.start();
-                    turn(iVmoy,iTurnRate);
+                    turn(iTurnRate,iVmoy);
                     while(T1.read_ms()<=tempo_ms){}
                     T1.stop();
                     T1.reset();
@@ -184,13 +206,13 @@ void TEST_1 (void)
                     break;
                     
             case 4: T1.start();
-                    rotation_complete(true);
+                    rotation_complete(1);
                     while(T1.read_ms()<=tempo_ms){}
                     T1.stop();
                     T1.reset();
                     stop_mot();
                     T1.start();
-                    rotation_complete(false);
+                    rotation_complete(0);
                     while(T1.read_ms()<=tempo_ms){}
                     T1.stop();
                     T1.reset();
@@ -222,30 +244,36 @@ void bluetooth(void)
             case 'b'://arriere
                 iVmoy=-50;
                 ahead(iVmoy);
+                printf("b\r\n");
                 break;
 
             case 'c'://virage droite
                 iVmoy=50;
                 iTurnRate=50;
-                turn(iVmoy,iTurnRate);
+                turn(iTurnRate,iVmoy);
+                printf("c\r\n");
                 break;
 
             case 'd'://virage gauche
                 iVmoy=50;
                 iTurnRate=-50;
-                turn(iVmoy,iTurnRate);
+                turn(iTurnRate,iVmoy);
+                printf("d\r\n");
                 break;
 
             case 'e':// rotation horaire
-                rotation_complete(true);
+                rotation_complete(1);
+                printf("e\r\n");
                 break;
 
             case 'f'://rotation anti horaire
-                rotation_complete(false);
+                rotation_complete(0);
+                printf("f\r\n");
                 break;
             
             case 'g'://stop
                 stop_mot();
+                printf("g\r\n");
                 break;
 
             default :
