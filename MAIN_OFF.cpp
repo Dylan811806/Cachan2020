@@ -4,6 +4,7 @@
 #include "MoteurBalais.h"
 #include "FonctionRasp.h"
 #include "FonctionCapteur.h"
+#include "FonctionBluetooth.h"
 
 int main()
 {
