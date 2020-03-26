@@ -12,14 +12,10 @@
 #define LOIN//calibrer pour savoir ce qu'on considere comme proche ou loin
 #define PROCHE
 void Follow_balle(float,float,float);
-int Force_virage;
-int Vit_moy;
-
-int etat=0;
-int iVmoy;
-int iTurnRate;
-int tempo_ms=1000;//peut changer
-
+extern int Force_virage;
+extern int Vit_moy;
+extern int iVmoy;
+extern int iTurnRate;
 void mooveRobot (int,int);
 void ahead(int);        //entree: int[-100(full AR); +100(full AV)] - vmoy
                        
@@ -45,5 +41,8 @@ void Init(void);
            
            
 #endif
+           
+           
+
            
            
