@@ -4,12 +4,32 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UPDATE KURA 26.03
 // TODO : SET DEFINE VALUE !
-// #DEFINE DEF_MOT_FORWARD
-// #DEFINE DEF_MOT_REVERSE
+#define DEF_MOT_FORWARD 0
+#define DEF_MOT_REVERSE 1
 // follow_balle() n'a rien à faire ici
 // Réorganiser fonction moteur autour d'une fonction principale (voir proposition)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Serial Bt(PC_10,PC_11);
+PwmOut MotL(PC_6);//2eme connecteur
+PwmOut MotR(PC_8);//1er connecteur , 3eme sur pc9, le 4eme sur pc8,5eme pc1 pc0 analogin,6eme pc2 et pc3
+DigitalOut SensL(PC_14,0);
+DigitalOut SensR(PC_15,0);//sens mot 3 ,4eme ph1
+//DigitalOut SensTest(PC_13,0);
+//DigitalOut SensL1(PC_14,1);
+//DigitalOut SensR1(PC_15,1);
+///DigitalOut TestPinPh(PH_0,1);// MARCHE PAS a oublier
+DigitalOut TestPinPH1(PH_1,1);
+Timer T1;     
+void Follow_balle(float,float,float);
+int Force_virage;
+int Vit_moy;
 
+int etat=0;
+int iVmoy;
+int iTurnRate;
+int tempo_ms=1000;//peut changer
+
+char commande_bt='g';
 /*void follow_balle(int x,int z)// a definir ce qu'on recup de la cam
     {
         switch(x){//covertion de ce qui l'envoie obligatoire entre -100 et 100
@@ -106,7 +126,7 @@ void mooveRobot(int iMotLeft, int iMotRight)
         iMotLeft = 100;
         if(iMotLeft > 100)
         {
-        printf("!!! Unexpected error iMotLeft value to high ! iMotLeft = %d !!!", iMotLeft)
+        printf("!!! Unexpected error iMotLeft value to high ! iMotLeft = %d !!!", iMotLeft);
         }
         else
         {
@@ -118,7 +138,7 @@ void mooveRobot(int iMotLeft, int iMotRight)
         iMotLeft = -100;
         if(iMotLeft < -100)
         {
-        printf("!!! Unexpected error iMotLeft value to low. Failed to set minimal value ! iMotLeft = %d !!!", iMotLeft)
+        printf("!!! Unexpected error iMotLeft value to low. Failed to set minimal value ! iMotLeft = %d !!!", iMotLeft);
         }
         else
         {
@@ -132,7 +152,7 @@ void mooveRobot(int iMotLeft, int iMotRight)
         iMotRight = 100;
         if(iMotRight > 100)
         {
-        printf("!!! Unexpected error iMotRight value to high. Failed to set max value ! iMotRight = %d !!!", iMotRight)
+        printf("!!! Unexpected error iMotRight value to high. Failed to set max value ! iMotRight = %d !!!", iMotRight);
         }
         else
         {
@@ -144,7 +164,7 @@ void mooveRobot(int iMotLeft, int iMotRight)
         iMotRight = -100;
         if(iMotRight < -100)
         {
-        printf("!!! Unexpected error iMotRight value to low. Failed to set min value ! iMotRight = %d !!!", iMotRight)
+        printf("!!! Unexpected error iMotRight value to low. Failed to set min value ! iMotRight = %d !!!", iMotRight);
         }
         else
         {
@@ -153,7 +173,7 @@ void mooveRobot(int iMotLeft, int iMotRight)
     }
     
   // PART 2 - PROCESSING SENSE
-    int iMotRightSense;
+    //int iMotRightSense;
     // Sense left motor
     if(iMotLeft < 0)
     {
@@ -377,63 +397,3 @@ void TEST_1 (void)
             default:break;
     }
 }
- 
-void bluetooth(void)
-{
-        //mmande_bt=NULL;
-        wait(0.02);
-        if(Bt.readable()==1) {
-            commande_bt=Bt.getc();
-            printf("%c",commande_bt);
-        }
-        switch(commande_bt) {
-            case 'a'://avant
-                iVmoy=50;
-                ahead(iVmoy);
-                printf("a\r\n");
-                break;
-
-            case 'b'://arriere
-                iVmoy=-50;
-                ahead(iVmoy);
-                printf("b\r\n");
-                break;
-
-            case 'c'://virage droite
-                iVmoy=50;
-                iTurnRate=50;
-                turn(iTurnRate,iVmoy);
-                printf("c\r\n");
-                break;
-
-            case 'd'://virage gauche
-                iVmoy=50;
-                iTurnRate=-50;
-                turn(iTurnRate,iVmoy);
-                printf("d\r\n");
-                break;
-
-            case 'e':// rotation horaire
-                rotation_complete(1);
-                printf("e\r\n");
-                break;
-
-            case 'f'://rotation anti horaire
-                rotation_complete(0);
-                printf("f\r\n");
-                break;
-            
-            case 'g'://stop
-                stop_mot();
-                printf("g\r\n");
-                break;
-
-            default :
-                break;
-        }
-
-        wait(0.02);
- 
-    
-}     
-    
