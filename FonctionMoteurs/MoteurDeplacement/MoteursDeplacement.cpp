@@ -1,25 +1,14 @@
 #include "MoteursDeplacement.h"
 #include "mbed.h"
 
-void Follow_balle(float,float,float);
-int Force_virage;
-int Vit_moy;
-Serial Bt(PC_10,PC_11);
-PwmOut MotL(PC_6);//2eme connecteur
-PwmOut MotR(PC_8);//1er connecteur , 3eme sur pc9, le 4eme sur pc8,5eme pc1 pc0 analogin,6eme pc2 et pc3
-DigitalOut SensL(PC_14,0);
-DigitalOut SensR(PC_15,0);//sens mot 3 ,4eme ph1
-//DigitalOut SensTest(PC_13,0);
-//DigitalOut SensL1(PC_14,1);
-//DigitalOut SensR1(PC_15,1);
-///DigitalOut TestPinPh(PH_0,1);// MARCHE PAS a oublier
-DigitalOut TestPinPH1(PH_1,1);
-int etat=0;
-int iVmoy;
-int iTurnRate;
-int tempo_ms=1000;//peut changer
-Timer T1;     
-char commande_bt='g';
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// UPDATE KURA 26.03
+// TODO : SET DEFINE VALUE !
+// #DEFINE DEF_MOT_FORWARD
+// #DEFINE DEF_MOT_REVERSE
+// follow_balle() n'a rien à faire ici
+// Réorganiser fonction moteur autour d'une fonction principale (voir proposition)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*void follow_balle(int x,int z)// a definir ce qu'on recup de la cam
     {
@@ -55,24 +44,16 @@ char commande_bt='g';
              default:break;
             }*/
 
-void Init(void)
-{
-    MotL.period_us(100);
-    MotR.period_us(100);
-    
-}
-
-
 /////////////////////////////////////////////////////////////////////////
-void test (void){ SensL.write(1);
+void test (void){ //
+    SensL.write(1);
     SensR.write(0);
     wait(0.5);
     SensL.write(0);
     SensR.write(1);
-    }
+}
 void ahead(int iVmoy)
 {
-   
     if(iVmoy >= 0)
     {
         SensL.write(AVANT);
@@ -93,7 +74,147 @@ void ahead(int iVmoy)
     printf("ahead\r\n");
 }
 
-/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// KURA EDIT 26.03
+
+void mooveRobot(int iMotLeft, int iMotRight)
+{
+    /*
+    DATE : 26.03
+    This fonction directly write output on the motor control pin based on value -100 to 100
+    Value under 0 are for reverse speed, 0 is standy value and above 0 is forward speed
+    This fonction is made to be used by other FUNCTION or by the user without manualy setting the
+    output pins value.
+    
+    TODO :  Calculation part before writing output
+            Making individual fonction for each part for clarity
+    */
+    
+  // PART 0 - Private var
+    int iMotLeftSense;
+    int iMotLeftOutput;
+    int iMotRightSense;
+    int iMotRightOutput;
+
+  // PART 1 - DEBUG ARG
+    //Debug on argument value iMotLeft
+    if(iMotLeft > 100)
+    {
+        iMotLeft = 100;
+        if(iMotLeft > 100)
+        {
+        printf("!!! Unexpected error iMotLeft value to high ! iMotLeft = %d !!!", iMotLeft)
+        }
+        else
+        {
+        printf("! Error iMotLeft value to high set to max [+100] by default !");
+        }
+    }
+    else if(iMotLeft < -100)
+    {
+        iMotLeft = -100;
+        if(iMotLeft < -100)
+        {
+        printf("!!! Unexpected error iMotLeft value to low. Failed to set minimal value ! iMotLeft = %d !!!", iMotLeft)
+        }
+        else
+        {
+        printf("! Error iMotLeft value to low set to min [-100] by default !");
+        }
+    }
+    
+    //Debug on argument value iMotRight
+    if(iMotRight > 100)
+    {
+        iMotRight = 100;
+        if(iMotRight > 100)
+        {
+        printf("!!! Unexpected error iMotRight value to high. Failed to set max value ! iMotRight = %d !!!", iMotRight)
+        }
+        else
+        {
+        printf("! Error iMotRight value to high set to max [+100] by default !");
+        }
+    }
+    else if(iMotRight < -100)
+    {
+        iMotRight = -100;
+        if(iMotRight < -100)
+        {
+        printf("!!! Unexpected error iMotRight value to low. Failed to set min value ! iMotRight = %d !!!", iMotRight)
+        }
+        else
+        {
+        printf("! Error iMotLeft value to low set to min [-100] by default !");
+        }
+    }
+    
+  // PART 2 - PROCESSING SENSE
+    int iMotRightSense;
+    // Sense left motor
+    if(iMotLeft < 0)
+    {
+        iMotLeftSense = DEF_MOT_REVERSE;
+    }
+    else if(iMotLeft >= 0)
+    {
+        iMotLeftSense = DEF_MOT_FORWARD;
+    }
+    else
+    {
+        printf("!!! Unexpected error on iMotLeft value when writing sense. iMotLeft = %d !!!", iMotLeft);
+    }
+    
+    // Sense Right Motor
+    if(iMotRight < 0)
+    {
+        iMotRightSense = DEF_MOT_REVERSE;
+    }
+    else if(iMotRight >= 0)
+    {
+        iMotRightSense = DEF_MOT_FORWARD;
+    }
+    else
+    {
+        printf("!!! Unexpected error on iMotRight value when writing sense. iMotRight = %d !!!", iMotRight);
+    }
+    
+  // PART 3 - PROCESSING SPEED
+    // Step 1 - Setting positive value
+    if(iMotLeft < 0)
+    {
+        iMotRightOutput = iMotLeft*(-1);
+    }
+    else
+    {
+        iMotRightOutput = iMotLeft;
+    }
+    if(iMotRight < 0)
+    {
+        iMotRightOutput = iMotRight*(-1);
+    }
+    else
+    {
+        iMotRightOutput = iMotRight;
+    }
+    // !!! TODO !!!
+    // Step 2 - Balancing mecanical differential 
+    // iMotLeftOutput = ?
+    // iMotRightOutput = ?
+    
+  // PART 4 - WRITING OUTPUT
+    SensL.write(iMotLeftSense);
+    SensR.write(iMotRightSense);
+    MotL.pulsewidth_us(iMotLeftOutput);   
+    MotR.pulsewidth_us(iMotRightOutput);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void turn(int iTurnRate, int iVmoyTurn)
 {
@@ -127,12 +248,17 @@ void turn(int iTurnRate, int iVmoyTurn)
    {
        MotL.pulsewidth_us(iVmoy - iTurnRate - TRAJECTORY_CAL);
    }
-printf("TURN\r\n");
+printf("Robot mooving..\r\n");
 }
 
-//le code pourra etre modifié pour permettre au robot de tourner sur lui meme
-
 /////////////////////////////////////////////////////////////////////////
+
+void Init(void)
+{
+    MotL.period_us(100);
+    MotR.period_us(100);
+    
+}
 
 void stop_mot (void)
 {
