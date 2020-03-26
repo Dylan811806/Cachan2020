@@ -1,5 +1,10 @@
-#include "MoteursDeplacement.h"
 #include "mbed.h"
+#include "MoteursDeplacement.h"
+int Force_virage;
+int Vit_moy;
+int iVmoy;
+int iTurnRate;
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UPDATE KURA 26.03
@@ -9,7 +14,7 @@
 // follow_balle() n'a rien à faire ici
 // Réorganiser fonction moteur autour d'une fonction principale (voir proposition)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Serial Bt(PC_10,PC_11);
+
 PwmOut MotL(PC_6);//2eme connecteur
 PwmOut MotR(PC_8);//1er connecteur , 3eme sur pc9, le 4eme sur pc8,5eme pc1 pc0 analogin,6eme pc2 et pc3
 DigitalOut SensL(PC_14,0);
@@ -20,16 +25,8 @@ DigitalOut SensR(PC_15,0);//sens mot 3 ,4eme ph1
 ///DigitalOut TestPinPh(PH_0,1);// MARCHE PAS a oublier
 DigitalOut TestPinPH1(PH_1,1);
 Timer T1;     
-void Follow_balle(float,float,float);
-int Force_virage;
-int Vit_moy;
 
-int etat=0;
-int iVmoy;
-int iTurnRate;
-int tempo_ms=1000;//peut changer
 
-char commande_bt='g';
 /*void follow_balle(int x,int z)// a definir ce qu'on recup de la cam
     {
         switch(x){//covertion de ce qui l'envoie obligatoire entre -100 et 100
@@ -307,6 +304,8 @@ void rotation_complete (int sens)////1 rotation horaire, 0 antihoraire
 }
 void TEST_1 (void)
 {
+    int tempo_ms=1000;//peut changer
+    int etat=0;
     T1.stop();
     T1.reset();
     switch(etat)
@@ -397,3 +396,5 @@ void TEST_1 (void)
             default:break;
     }
 }
+ 
+    
