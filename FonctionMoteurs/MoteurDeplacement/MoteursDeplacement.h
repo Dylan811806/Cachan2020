@@ -11,8 +11,16 @@
 #define MAX_CENTRE
 #define LOIN//calibrer pour savoir ce qu'on considere comme proche ou loin
 #define PROCHE
+void Follow_balle(float,float,float);
+int Force_virage;
+int Vit_moy;
 
+int etat=0;
+int iVmoy;
+int iTurnRate;
+int tempo_ms=1000;//peut changer
 
+void mooveRobot (int,int);
 void ahead(int);        //entree: int[-100(full AR); +100(full AV)] - vmoy
                        
 
@@ -26,13 +34,12 @@ void turn(int, int);    //entrees: int[-100(full G); +100(full D)] - taux de vir
                         //
 
                                 
-void stop (void);// arret moteur  
+void stop_mot (void);// arret moteur  
 
 void rotation_complete (int);              
 
                         
 void TEST_1 (void);
-void bluetooth(void);
 void test (void);
 void Init(void);          
            
